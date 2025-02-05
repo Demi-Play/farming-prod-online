@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<h2>Страница входа</h2>
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.email.label }}
+        {{ form.email }}
+    </div>
+    <div>
+        {{ form.password.label }}
+        {{ form.password }}
+    </div>
+    <div>
+        {{ form.submit() }}
+    </div>
+    <div><a href="{{ url_for('register') }}">Регистрация</a></div>
+</form>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<form method="POST">
+    <h2>Страница входа</h2>
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.name.label }}
+        {{ form.name }}
+    </div><div>
+        {{ form.surname.label }}
+        {{ form.surname }}
+    </div><div>
+        {{ form.email.label }}
+        {{ form.email }}
+    </div>
+    <div>
+        {{ form.password.label }}
+        {{ form.password }}
+    </div>
+    <div>
+        {{ form.confirm_password.label }}
+        {{ form.confirm_password }}
+    </div>
+    <div>
+        {{ form.submit() }}
+    </div>
+    <div><a href="{{ url_for('login') }}">Вход</a></div>
+</form>
+{% endblock %}

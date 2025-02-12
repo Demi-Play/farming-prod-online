@@ -27,8 +27,10 @@
 1. Клонируйте репозиторий:
 
 ```bash
-git clone https://github.com/yourusername/farming-prod-online.git
+git clone https://github.com/Demi-Play/farming-prod-online.git
 ```
+
+Или просто скачайте архивом распаковав в удобную для вас дирректорию
 
 2. Установите зависимости:
 

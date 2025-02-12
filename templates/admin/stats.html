@@ -1,0 +1,58 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Статистика{% endblock %}
+
+{% block admin_content %}
+<div class="admin-stats">
+    <h1>Статистика платформы</h1>
+
+    <div class="stats-filters">
+        <form method="GET" class="filter-form">
+            <div class="form-group">
+                <label>Период:</label>
+                <select name="period" class="form-control">
+                    <option value="day" {% if period == 'day' %}selected{% endif %}>За день</option>
+                    <option value="week" {% if period == 'week' %}selected{% endif %}>За неделю</option>
+                    <option value="month" {% if period == 'month' %}selected{% endif %}>За месяц</option>
+                    <option value="year" {% if period == 'year' %}selected{% endif %}>За год</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Применить</button>
+        </form>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stats-card">
+            <h3>Продажи</h3>
+            <div class="stats-chart">
+                {{ sales_chart|safe }}
+            </div>
+            <div class="stats-summary">
+                <p>Всего продаж: {{ stats.total_sales }}</p>
+                <p>Средний чек: {{ stats.average_order }}</p>
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <h3>Популярные категории</h3>
+            <div class="stats-chart">
+                {{ categories_chart|safe }}
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <h3>Активность пользователей</h3>
+            <div class="stats-chart">
+                {{ users_activity_chart|safe }}
+            </div>
+        </div>
+
+        <div class="stats-card">
+            <h3>Статусы заказов</h3>
+            <div class="stats-chart">
+                {{ orders_status_chart|safe }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

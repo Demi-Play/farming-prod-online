@@ -1,0 +1,48 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Панель администратора{% endblock %}
+
+{% block admin_content %}
+<div class="admin-dashboard">
+    <h1>Панель администратора</h1>
+    
+    
+
+    <div class="quick-actions">
+        <h2>Быстрые действия</h2>
+        <div class="action-buttons">
+            <a href="{{ url_for('admin_panel.stats') }}" class="btn btn-primary">
+                <i class="fas fa-chart-bar"></i> Статистика
+            </a>
+            <a href="{{ url_for('admin_panel.activity_log') }}" class="btn btn-primary">
+                <i class="fas fa-history"></i> Журнал действий
+            </a>
+            <a href="{{ url_for('users_list') }}" class="btn btn-primary">
+                <i class="fas fa-users"></i> Управление пользователями
+            </a>
+            <a href="{{ url_for('orders_list') }}" class="btn btn-primary">
+                <i class="fas fa-shopping-cart"></i> Управление заказами
+            </a>
+            <a href="{{ url_for('categories_list') }}" class="btn btn-primary">
+                <i class="fas fa-tags"></i> Управление категориями
+            </a>
+            <a href="{{ url_for('products_list') }}" class="btn btn-primary">
+                <i class="fas fa-store"></i> Управление продуктами
+            </a>
+        </div>
+    </div>
+
+    <div class="recent-activity">
+        <h2>Последние действия</h2>
+        <div class="activity-list">
+            {% for activity in recent_activities %}
+            <div class="activity-item">
+                <span class="activity-time">{{ activity.created_at.strftime('%H:%M') }}</span>
+                <span class="activity-type">{{ activity.type }}</span>
+                <span class="activity-description">{{ activity.description }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Создание заказа{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Создание нового заказа</h2>
+    <form method="POST" id="orderForm">
+        {{ form.hidden_tag() }}
+        <div class="search-filters">
+            <div class="form-group">
+                {{ form.category.label }}
+                {{ form.category(class="form-control", onchange="updateProducts()") }}
+            </div>
+            
+        </div>
+        <div class="form-group">
+            {{ form.product_id.label }}
+            {{ form.product_id(class="form-control") }}
+            {% if form.product_id.errors %}
+                {% for error in form.product_id.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ form.quantity.label }}
+            {{ form.quantity(class="form-control") }}
+            {% if form.quantity.errors %}
+                {% for error in form.quantity.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+        <br>
+        <br>
+        <a href="{{ url_for('orders_list') }}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+
+<script>
+function updateProducts() {
+    const categoryId = document.getElementById('category').value;
+    const searchQuery = document.getElementById('search').value;
+    
+    fetch(`/api/products/search?category=${categoryId}&query=${searchQuery}`)
+        .then(response => response.json())
+        .then(data => {
+            const productSelect = document.getElementById('product_id');
+            productSelect.innerHTML = '';
+            
+            data.products.forEach(product => {
+                const option = new Option(
+                    `${product.name} - ${product.price}₽`, 
+                    product.id
+                );
+                productSelect.add(option);
+            });
+        });
+}
+</script>
+{% endblock %} 

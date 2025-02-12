@@ -1,0 +1,57 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}Журнал действий{% endblock %}
+
+{% block admin_content %}
+<div class="activity-log">
+    <h1>Журнал действий</h1>
+
+    <div class="log-filters">
+        <form method="GET" class="filter-form">
+            <div class="form-group">
+                <label>Тип действия:</label>
+                <select name="action_type" class="form-control">
+                    <option value="">Все действия</option>
+                    <option value="user" {% if action_type == 'user' %}selected{% endif %}>Действия с пользователями</option>
+                    <option value="order" {% if action_type == 'order' %}selected{% endif %}>Действия с заказами</option>
+                    <option value="product" {% if action_type == 'product' %}selected{% endif %}>Действия с продуктами</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Пользователь:</label>
+                <input type="text" name="user" class="form-control" value="{{ user }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Фильтровать</button>
+        </form>
+    </div>
+
+    <div class="log-table">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Время</th>
+                    <th>Пользователь</th>
+                    <th>Действие</th>
+                    <th>Описание</th>
+                    <th>IP адрес</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.created_at.strftime('%d.%m.%Y %H:%M:%S') }}</td>
+                    <td>{{ log.user.name }}</td>
+                    <td>{{ log.action_type }}</td>
+                    <td>{{ log.description }}</td>
+                    <td>{{ log.ip_address }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        {{ pagination.links|safe }}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Редактирование категории{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Редактирование категории</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+            {% if form.name.errors %}
+                {% for error in form.name.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ form.description.label }}
+            {{ form.description(class="form-control") }}
+            {% if form.description.errors %}
+                {% for error in form.description.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+        <a href="{{ url_for('categories_list') }}" class="btn btn-secondary">Отмена</a>
+    </form>
+
+    {% if category.products %}
+    <div class="related-products">
+        <h3>Продукты в категории</h3>
+        <div class="products-grid">
+            {% for product in category.products %}
+            <div class="product-card compact">
+                <h4>{{ product.name }}</h4>
+                <p>Цена: {{ product.price }} ₽</p>
+                <p>В наличии: {{ product.count }}</p>
+                <a href="{{ url_for('product_edit', id=product.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление категориями{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Управление категориями</h1>
+    {% if current_user.role == 'admin' or current_user.role == 'seller' %}
+        <a href="{{ url_for('category_add') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Добавить категорию
+        </a>
+    {% endif %}
+</div>
+
+<div class="categories-list">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Количество продуктов</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+            <tr>
+                <td>{{ category.id }}</td>
+                <td>{{ category.name }}</td>
+                <td>{{ category.description }}</td>
+                <td>{{ category.products|length }}</td>
+                <td class="actions">
+                    <a href="{{ url_for('category_edit', id=category.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <a href="{{ url_for('category_delete', id=category.id) }}" 
+                       class="btn btn-danger" 
+                       onclick="return confirm('Вы уверены? Это действие удалит все продукты в данной категории!')">
+                        <i class="fas fa-trash"></i> Удалить
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

@@ -1,0 +1,386 @@
+/* Admin Dashboard */
+body {
+    background-color: #0a0a0a;
+    margin: 0;
+    padding: 0;
+}
+
+.admin-container {
+    background-color: #0a0a0a;
+}
+
+.admin-content {
+    background-color: #0a0a0a;
+}
+
+/* Tables */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: #1a1a1a;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #2a2a2a;
+}
+
+.admin-table th {
+    background: #2a2a2a;
+    color: #fff;
+    font-weight: 600;
+}
+
+.admin-table tr:hover {
+    background: #222;
+}
+
+.admin-table td {
+    color: #ddd;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: #4a90e2;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #357abd;
+}
+
+.btn-secondary {
+    background: #2a2a2a;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background: #3a3a3a;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* Rest of your existing admin.css styles... */
+.admin-dashboard {
+    padding: 2rem;
+}
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #1a1a1a;
+    padding: 1.5rem;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    color: #4a90e2;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #888;
+}
+
+.stat-info p {
+    margin: 0.5rem 0 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* Activity Log */
+.activity-log {
+    padding: 2rem;
+}
+
+.log-filters {
+    margin-bottom: 2rem;
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.activity-item {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-bottom: 1px solid #2a2a2a;
+    color: #ddd;
+}
+
+.activity-time {
+    color: #888;
+    font-size: 0.875rem;
+}
+
+/* Form elements */
+.form-control {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    color: #fff;
+    padding: 0.5rem;
+    border-radius: 4px;
+}
+
+.form-control:focus {
+    border-color: #4a90e2;
+    outline: none;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.pagination a {
+    padding: 0.5rem 1rem;
+    background: #1a1a1a;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.pagination a:hover {
+    background: #2a2a2a;
+}
+
+.pagination .active {
+    background: #4a90e2;
+}
+
+/* Admin Layout */
+.admin-container {
+    display: flex;
+    min-height: calc(100vh - 60px);
+}
+
+.admin-sidebar {
+    width: 250px;
+    background: var(--sidebar-bg, #2c3e50);
+    color: #fff;
+    padding: 1rem 0;
+    flex-shrink: 0;
+}
+
+.admin-content {
+    flex-grow: 1;
+    padding: 2rem;
+    background: var(--content-bg, #f5f6fa);
+}
+
+/* Admin Navbar */
+.admin-navbar {
+    background: var(--navbar-bg, #34495e);
+    padding: 1rem 0;
+    color: #fff;
+}
+
+.admin-navbar .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-nav-brand a {
+    color: #fff;
+    font-size: 1.25rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.admin-nav-links {
+    display: flex;
+    gap: 1rem;
+}
+
+.admin-nav-links .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.admin-nav-links .nav-link:hover,
+.admin-nav-links .nav-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Sidebar Navigation */
+.sidebar-header {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin: 0;
+}
+
+.sidebar-nav li a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.sidebar-nav li a:hover,
+.sidebar-nav li.active a {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.sidebar-nav li a i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Admin Footer */
+.admin-footer {
+    background: var(--footer-bg, #2c3e50);
+    color: #fff;
+    padding: 1rem 0;
+    text-align: center;
+}
+
+/* Stats Page */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.stats-card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 10px;
+}
+
+.stats-chart {
+    margin: 1rem 0;
+    height: 300px;
+}
+
+.stats-summary {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .admin-container {
+        flex-direction: column;
+    }
+
+    .admin-sidebar {
+        width: 100%;
+        order: 2;
+    }
+
+    .admin-content {
+        order: 1;
+    }
+
+    .admin-nav-links {
+        display: none;
+    }
+
+    .admin-nav-user {
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-nav-user .user-info {
+        display: none;
+    }
+
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-form {
+        flex-direction: column;
+    }
+
+    .filter-form .form-group {
+        width: 100%;
+    }
+
+    .admin-table {
+        display: block;
+        overflow-x: auto;
+    }
+} 

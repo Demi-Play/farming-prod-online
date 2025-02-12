@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавление категории{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Добавление новой категории</h2>
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            {{ form.name.label }}
+            {{ form.name(class="form-control") }}
+            {% if form.name.errors %}
+                {% for error in form.name.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="form-group">
+            {{ form.description.label }}
+            {{ form.description(class="form-control") }}
+            {% if form.description.errors %}
+                {% for error in form.description.errors %}
+                    <span class="error-message">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {{ form.submit(class="btn btn-primary") }}
+        <br>
+        <br>
+        <a href="{{ url_for('categories_list') }}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+{% endblock %} 

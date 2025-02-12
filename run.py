@@ -6,7 +6,7 @@ if __name__ == "__main__":
                 #  !!
                 # \!!/
                 #  \/
-    
+    # ГЫЫ
     
     # with app.app_context():
     #     create_db()

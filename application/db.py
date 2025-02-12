@@ -42,6 +42,7 @@ class Product(db.Model):
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'), nullable=False)
     image = db.Column(db.String(255), nullable=True)
+    category = db.relationship('Category', backref=db.backref('products', lazy=True))
 
 class Orders(db.Model):
     # Orders table
@@ -51,6 +52,13 @@ class Orders(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now())
+    product = db.relationship('Product', backref=db.backref('orders', lazy=True))
+    total_price = db.Column(db.Float, nullable=False)
+
+    def __init__(self, *args, **kwargs):
+        super(Orders, self).__init__(*args, **kwargs)
+        if self.product and self.quantity:
+            self.total_price = self.product.price * self.quantity
 
 class Reviews(db.Model):
     # Reviews table
@@ -66,3 +74,18 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
+
+class ActivityLog(db.Model):
+    """Модель для журнала действий"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action_type = db.Column(db.String(50), nullable=False)  # user, order, product
+    description = db.Column(db.String(255), nullable=False)
+    ip_address = db.Column(db.String(45))  # IPv6 может быть длиннее IPv4
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Связи
+    user = db.relationship('User', backref=db.backref('activities', lazy=True))
+
+    def __repr__(self):
+        return f'<ActivityLog {self.action_type}: {self.description}>'

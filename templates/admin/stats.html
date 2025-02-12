@@ -23,36 +23,45 @@
 
     <div class="stats-grid">
         <div class="stats-card">
-            <h3>Продажи</h3>
+            <label class="label">Продажи</label>
             <div class="stats-chart">
                 {{ sales_chart|safe }}
             </div>
             <div class="stats-summary">
-                <p>Всего продаж: {{ stats.total_sales }}</p>
-                <p>Средний чек: {{ stats.average_order }}</p>
+                <p>Всего продаж: {{ stats.total_sales }} ₽</p>
+                <p>Средний чек: {{ stats.average_order }} ₽</p>
             </div>
         </div>
-
+    
         <div class="stats-card">
-            <h3>Популярные категории</h3>
+            <label class="label">Популярные категории</label>
             <div class="stats-chart">
                 {{ categories_chart|safe }}
             </div>
         </div>
-
+    
         <div class="stats-card">
-            <h3>Активность пользователей</h3>
+            <label class="label">Активность пользователей</label>
             <div class="stats-chart">
                 {{ users_activity_chart|safe }}
             </div>
         </div>
-
+    
         <div class="stats-card">
-            <h3>Статусы заказов</h3>
+                <label>Статусы заказов</label>
             <div class="stats-chart">
                 {{ orders_status_chart|safe }}
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .label {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        color: #fff;
+    }
+</style>
 {% endblock %} 

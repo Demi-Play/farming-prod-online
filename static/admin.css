@@ -312,26 +312,37 @@ body {
 /* Stats Page */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
 }
 
 .stats-card {
-    background: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 10px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
 .stats-chart {
-    margin: 1rem 0;
-    height: 300px;
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    min-height: 300px;
 }
 
 .stats-summary {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
+    color: #ffffff;
+    font-size: 16px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-top: 15px;
+}
+
+.stats-summary p {
+    margin: 8px 0;
 }
 
 /* Responsive Design */
@@ -383,4 +394,57 @@ body {
         display: block;
         overflow-x: auto;
     }
+}
+
+/* Стили для линий графика */
+.js-plotly-plot .plotly .scatter .lines {
+    stroke-width: 2px !important;
+}
+
+.js-plotly-plot .plotly .scatter .points {
+    stroke-width: 2px !important;
+}
+
+/* Стили для фильтров */
+.stats-filters {
+    background: #1a1a1a;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px;
+}
+
+.filter-form {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.filter-form .form-group {
+    flex: 1;
+}
+
+.filter-form label {
+    color: #ffffff;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Стили для Plotly графиков */
+.js-plotly-plot .plotly .main-svg {
+    background: transparent !important;
+}
+
+.js-plotly-plot .plotly .bg {
+    fill: transparent !important;
+}
+
+/* Темная тема для модального окна Plotly */
+.plotly-notifier {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+/* Стили для легенды графиков */
+.legend-item {
+    color: #ffffff !important;
 } 

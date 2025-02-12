@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, FileField, IntegerField, SelectField, TextAreaField, SearchField
-from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange
+from wtforms.validators import DataRequired, Length, Email, EqualTo, NumberRange, Optional
 
 class RegisterForm(FlaskForm):
     name = StringField('Имя', validators=[DataRequired(), Length(4, 36)])
@@ -104,5 +104,21 @@ class CategoryForm(FlaskForm):
     description = TextAreaField('Описание', validators=[
         DataRequired(),
         Length(min=10, max=500, message='Описание должно быть от 10 до 500 символов')
+    ])
+    submit = SubmitField('Сохранить')
+
+class ProfileForm(FlaskForm):
+    """Форма редактирования профиля пользователя"""
+    name = StringField('Имя', validators=[
+        DataRequired(message='Это поле обязательно'),
+        Length(min=2, max=100, message='Имя должно быть от 2 до 100 символов')
+    ])
+    email = StringField('Email', validators=[
+        DataRequired(message='Это поле обязательно'),
+        Email(message='Введите корректный email')
+    ])
+    password = PasswordField('Новый пароль', validators=[
+        Optional(),
+        Length(min=6, message='Пароль должен быть не менее 6 символов')
     ])
     submit = SubmitField('Сохранить')

@@ -6,7 +6,8 @@ from application.forms import (
     LoginForm, RegisterForm, ProductForm, 
     OrderForm,  # Используем OrderForm вместо Orders
     ReviewForm,
-    CategoryForm
+    CategoryForm,
+    ProfileForm
 )
 from functools import wraps
 from flask import Blueprint
@@ -15,6 +16,27 @@ from application.utils import role_required
 from datetime import datetime, timedelta
 import plotly.express as px
 import pandas as pd
+
+# В начале файла, после импортов
+def log_activity(action_type, description):
+    """Логирование действий пользователя"""
+    try:
+        if not current_user or not current_user.is_authenticated:
+            print("No authenticated user for logging activity")
+            return
+            
+        activity = ActivityLog(
+            user_id=current_user.id,
+            action_type=action_type,
+            description=description,
+            ip_address=request.remote_addr
+        )
+        db.session.add(activity)
+        db.session.commit()
+        print(f"Successfully logged activity: {action_type} - {description}")
+    except Exception as e:
+        print(f"Error logging activity: {str(e)}")
+        db.session.rollback()
 
 # Декоратор для проверки роли продавца или админа
 def seller_or_admin_required(f):
@@ -69,30 +91,154 @@ def index():
 @admin_panel.route('/stats')
 @role_required('admin')
 def stats():
-    """Страница статистики"""
+    """Страница статистики админки"""
     period = request.args.get('period', 'month')
     
-    # Базовая статистика
-    stats = {
-        'total_sales': Order.query.filter(Order.status == 'completed').count(),
-        'average_order': db.session.query(func.avg(Order.total_price))\
-            .filter(Order.status == 'completed')\
+    # Определяем дату начала периода
+    now = datetime.utcnow()
+    if period == 'day':
+        start_date = now - timedelta(days=1)
+    elif period == 'week':
+        start_date = now - timedelta(weeks=1)
+    elif period == 'month':
+        start_date = now - timedelta(days=30)
+    else:  # year
+        start_date = now - timedelta(days=365)
+
+    try:
+        # Получаем общую статистику
+        total_sales = db.session.query(func.sum(Orders.total_price))\
+            .filter(Orders.created_at >= start_date)\
             .scalar() or 0
-    }
-    
-    # Здесь должна быть логика для построения графиков
-    # Пример заглушки для графиков
-    charts = {
-        'sales_chart': "<div>График продаж</div>",
-        'categories_chart': "<div>График категорий</div>",
-        'users_activity_chart': "<div>График активности</div>",
-        'orders_status_chart': "<div>График статусов</div>"
-    }
-    
-    return render_template('admin/stats.html',
-                         stats=stats,
-                         period=period,
-                         **charts)
+            
+        orders_count = Orders.query\
+            .filter(Orders.created_at >= start_date)\
+            .count()
+            
+        average_order = total_sales / orders_count if orders_count > 0 else 0
+
+        stats = {
+            'total_sales': round(total_sales, 2),
+            'orders_count': orders_count,
+            'average_order': round(average_order, 2)
+        }
+
+        # Статистика продаж по дням
+        sales_data = db.session.query(
+            func.date(Orders.created_at).label('date'),
+            func.sum(Orders.total_price).label('total')
+        ).filter(
+            Orders.created_at >= start_date
+        ).group_by(
+            func.date(Orders.created_at)
+        ).all()
+
+        # Преобразуем в DataFrame для Plotly
+        df_sales = pd.DataFrame(sales_data, columns=['date', 'total'])
+
+        # Обновляем настройки для всех графиков
+        layout_template = dict(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='white'),
+            xaxis=dict(
+                gridcolor='rgba(128,128,128,0.2)',
+                zerolinecolor='rgba(128,128,128,0.2)'
+            ),
+            yaxis=dict(
+                gridcolor='rgba(128,128,128,0.2)',
+                zerolinecolor='rgba(128,128,128,0.2)'
+            )
+        )
+
+        # Применяем темную тему к графику продаж
+        sales_chart = px.line(df_sales, x='date', y='total',
+                            title='Динамика продаж',
+                            labels={'date': 'Дата', 'total': 'Сумма продаж (₽)'})
+        sales_chart.update_traces(
+            line=dict(color='#00ff00', width=2),
+            mode='lines+markers',
+            marker=dict(size=8, color='#00ff00')
+        )
+        sales_chart.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font_color='white',
+            xaxis=dict(
+                showgrid=True,
+                gridcolor='rgba(128,128,128,0.2)',
+                tickfont=dict(color='white')
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridcolor='rgba(128,128,128,0.2)',
+                tickfont=dict(color='white')
+            ),
+            margin=dict(l=50, r=20, t=50, b=50)
+        )
+
+        # Статистика по категориям
+        categories_data = db.session.query(
+            Category.name,
+            func.count(Product.id).label('count')
+        ).join(
+            Product
+        ).group_by(
+            Category.name
+        ).all()
+
+        df_categories = pd.DataFrame(categories_data, columns=['name', 'count'])
+
+        # Применяем темную тему к графику категорий
+        categories_chart = px.pie(df_categories, names='name', values='count',
+                                title='Распределение по категориям')
+        categories_chart.update_layout(**layout_template)
+
+        # Статистика активности пользователей
+        users_activity = db.session.query(
+            func.date(ActivityLog.created_at).label('date'),
+            func.count(ActivityLog.id).label('count')
+        ).filter(
+            ActivityLog.created_at >= start_date
+        ).group_by(
+            func.date(ActivityLog.created_at)
+        ).all()
+
+        df_activity = pd.DataFrame(users_activity, columns=['date', 'count'])
+
+        # Применяем темную тему к графику активности
+        users_activity_chart = px.bar(df_activity, x='date', y='count',
+                                    title='Активность пользователей',
+                                    labels={'date': 'Дата', 'count': 'Количество действий'})
+        users_activity_chart.update_layout(**layout_template)
+
+        # Статистика по статусам заказов
+        orders_status = db.session.query(
+            Orders.status,
+            func.count(Orders.id).label('count')
+        ).group_by(
+            Orders.status
+        ).all()
+
+        df_orders = pd.DataFrame(orders_status, columns=['status', 'count'])
+
+        # Применяем темную тему к графику статусов заказов
+        orders_status_chart = px.pie(df_orders, names='status', values='count',
+                                   title='Статусы заказов')
+        orders_status_chart.update_layout(**layout_template)
+
+        return render_template('admin/stats.html',
+                             period=period,
+                             stats=stats,
+                             sales_chart=sales_chart.to_html(full_html=False),
+                             categories_chart=categories_chart.to_html(full_html=False),
+                             users_activity_chart=users_activity_chart.to_html(full_html=False),
+                             orders_status_chart=orders_status_chart.to_html(full_html=False))
+
+    except Exception as e:
+        print(f"Error in admin stats: {str(e)}")
+        flash('Ошибка при загрузке статистики', 'error')
+        return render_template('admin/stats.html', period=period)
 
 @admin_panel.route('/activity-log')
 @role_required('admin')
@@ -143,6 +289,8 @@ def register():
         
         db.session.add(new_user)
         db.session.commit()
+        
+        log_activity('user', f'Зарегистрирован новый пользователь: {new_user.email}')
         flash('Регистрация успешна!', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
@@ -216,21 +364,23 @@ def product_add():
             pass
         db.session.add(product)
         db.session.commit()
+        
+        log_activity('product', f'Добавлен новый продукт: {product.name}')
         flash('Продукт добавлен!', 'success')
         return redirect(url_for('products_list'))
     return render_template('products/add.html', form=form)
 
 @app.route('/products/<int:id>/edit', methods=['GET', 'POST'])
-@login_required
+@seller_or_admin_required
 def product_edit(id):
     """Редактирование продукта"""
     product = Product.query.get_or_404(id)
-    if current_user.id != product.seller_id and current_user.role != 'admin':
-        flash('Доступ запрещен!', 'danger')
-        return redirect(url_for('products_list'))
+    if current_user.role != 'admin' and product.seller_id != current_user.id:
+        abort(403)
     
     form = ProductForm(obj=product)
     if form.validate_on_submit():
+        old_name = product.name
         product.name = form.name.data
         product.description = form.description.data
         product.price = form.price.data
@@ -239,21 +389,25 @@ def product_edit(id):
         if form.image.data:
             product.image = form.image.data
         db.session.commit()
+        
+        log_activity('product', f'Отредактирован продукт: {old_name} -> {product.name}')
         flash('Продукт обновлен!', 'success')
         return redirect(url_for('products_list'))
     return render_template('products/edit.html', form=form, product=product)
 
 @app.route('/products/<int:id>/delete')
-@login_required
+@seller_or_admin_required
 def product_delete(id):
     """Удаление продукта"""
     product = Product.query.get_or_404(id)
-    if current_user.id != product.seller_id and current_user.role != 'admin':
-        flash('Доступ запрещен!', 'danger')
-        return redirect(url_for('products_list'))
+    if current_user.role != 'admin' and product.seller_id != current_user.id:
+        abort(403)
     
+    product_name = product.name
     db.session.delete(product)
     db.session.commit()
+    
+    log_activity('product', f'Удален продукт: {product_name}')
     flash('Продукт удален!', 'success')
     return redirect(url_for('products_list'))
 
@@ -288,15 +442,13 @@ def order_add():
                 quantity=form.quantity.data,
                 status='pending'
             )
-            # Вычисляем total_price при создании заказа
             order.total_price = product.price * form.quantity.data
-            
-            # Уменьшаем количество доступного товара
             product.count -= form.quantity.data
             
             db.session.add(order)
             db.session.commit()
             
+            log_activity('order', f'Создан новый заказ #{order.id} на сумму {order.total_price}₽')
             flash('Заказ создан!', 'success')
             return redirect(url_for('orders_list'))
         else:
@@ -310,9 +462,46 @@ def update_order_status(id):
     order = Orders.query.get_or_404(id)
     new_status = request.form.get('status')
     if new_status in ['new', 'processing', 'completed', 'cancelled']:
+        old_status = order.status
         order.status = new_status
         db.session.commit()
+        log_activity('order', f'Изменен статус заказа #{id} с {old_status} на {new_status}')
         flash('Статус заказа обновлен!', 'success')
+    return redirect(url_for('orders_list'))
+
+@app.route('/orders/<int:id>/status/<status>')
+@login_required
+def order_status_change(id, status):
+    order = Orders.query.get_or_404(id)
+    if current_user.role != 'admin' and order.user_id != current_user.id:
+        abort(403)
+    
+    old_status = order.status
+    order.status = status
+    db.session.commit()
+    
+    log_activity('order', f'Изменен статус заказа #{order.id}: {old_status} -> {status}')
+    flash('Статус заказа обновлен!', 'success')
+    return redirect(url_for('orders_list'))
+
+@app.route('/orders/<int:id>/cancel')
+@login_required
+def order_cancel(id):
+    order = Orders.query.get_or_404(id)
+    if current_user.role != 'admin' and order.user_id != current_user.id:
+        abort(403)
+    
+    if order.status != 'completed':
+        # Возвращаем товар на склад
+        product = Product.query.get(order.product_id)
+        product.count += order.quantity
+        order.status = 'cancelled'
+        db.session.commit()
+        
+        log_activity('order', f'Отменен заказ #{order.id}')
+        flash('Заказ отменен!', 'success')
+    else:
+        flash('Нельзя отменить выполненный заказ!', 'danger')
     return redirect(url_for('orders_list'))
 
 # --------- Управление отзывами ---------
@@ -424,6 +613,30 @@ def user_edit(id):
         return redirect(url_for('users_list'))
     return render_template('admin/user_edit.html', user=user)
 
+@app.route('/users/<int:id>/role/<role>')
+@role_required('admin')
+def user_change_role(id, role):
+    user = User.query.get_or_404(id)
+    old_role = user.role
+    user.role = role
+    db.session.commit()
+    
+    log_activity('user', f'Изменена роль пользователя {user.email}: {old_role} -> {role}')
+    flash('Роль пользователя изменена!', 'success')
+    return redirect(url_for('users_list'))
+
+@app.route('/users/<int:id>/toggle_active')
+@role_required('admin')
+def user_toggle_active(id):
+    user = User.query.get_or_404(id)
+    user.is_active = not user.is_active
+    db.session.commit()
+    
+    status = 'разблокирован' if user.is_active else 'заблокирован'
+    log_activity('user', f'Пользователь {user.email} {status}')
+    flash(f'Пользователь {status}!', 'success')
+    return redirect(url_for('users_list'))
+
 # В конце файла изменим регистрацию blueprint
 app.register_blueprint(admin_panel)
 
@@ -530,5 +743,39 @@ def seller_stats():
                          sales_chart=sales_chart.to_html(full_html=False, include_plotlyjs=True) if sales_chart else '',
                          products_chart='',  # Добавим позже
                          orders_status_chart='')  # Добавим позже
+
+@app.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+def profile_edit():
+    form = ProfileForm(obj=current_user)
+    if form.validate_on_submit():
+        old_email = current_user.email
+        current_user.name = form.name.data
+        current_user.email = form.email.data
+        if form.password.data:
+            current_user.set_password(form.password.data)
+        db.session.commit()
+        
+        log_activity('user', f'Обновлен профиль пользователя: {old_email} -> {current_user.email}')
+        flash('Профиль обновлен!', 'success')
+        return redirect(url_for('profile'))
+    return render_template('profile/edit.html', form=form)
+
+@app.route('/orders/<int:id>/pay')
+@login_required
+def order_pay(id):
+    order = Orders.query.get_or_404(id)
+    if order.user_id != current_user.id:
+        abort(403)
+    
+    if order.status == 'pending':
+        order.status = 'paid'
+        db.session.commit()
+        
+        log_activity('order', f'Оплачен заказ #{order.id} на сумму {order.total_price}₽')
+        flash('Заказ оплачен!', 'success')
+    else:
+        flash('Невозможно оплатить заказ в текущем статусе!', 'danger')
+    return redirect(url_for('orders_list'))
 
 

@@ -32,17 +32,6 @@
         </div>
     </div>
 
-    <div class="recent-activity">
-        <h2>Последние действия</h2>
-        <div class="activity-list">
-            {% for activity in recent_activities %}
-            <div class="activity-item">
-                <span class="activity-time">{{ activity.created_at.strftime('%H:%M') }}</span>
-                <span class="activity-type">{{ activity.type }}</span>
-                <span class="activity-description">{{ activity.description }}</span>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
+    
 </div>
 {% endblock %} 

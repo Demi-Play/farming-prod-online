@@ -65,7 +65,7 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--primary-color);
+    background-color: #000;
     color: white;
 }
 
@@ -209,6 +209,7 @@ form input {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    margin-top: 30px;
 }
 
 /* Products Grid */

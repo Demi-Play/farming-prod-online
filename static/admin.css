@@ -59,12 +59,12 @@ body {
 }
 
 .btn-primary {
-    background: #4a90e2;
-    color: #fff;
+    background-color: #000;
+    color: white;
 }
 
 .btn-primary:hover {
-    background: #357abd;
+    background: #35bd52;
 }
 
 .btn-secondary {
@@ -204,33 +204,37 @@ body {
 
 .admin-sidebar {
     width: 250px;
-    background: var(--sidebar-bg, #2c3e50);
+    background: var(--sidebar-bg, #1e2a36);
     color: #fff;
     padding: 1rem 0;
     flex-shrink: 0;
 }
 
+
 .admin-content {
     flex-grow: 1;
     padding: 2rem;
-    background: var(--content-bg, #f5f6fa);
+    background: var(--content-bg, #000);
+    color: #fff;
 }
 
 /* Admin Navbar */
 .admin-navbar {
-    background: var(--navbar-bg, #34495e);
+    background: var(--navbar-bg, #ffffff);
     padding: 1rem 0;
-    color: #fff;
+    color: #000000;
 }
 
 .admin-navbar .container {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    color: #000000;
 }
 
 .admin-nav-brand a {
-    color: #fff;
+    margin-left: 40px;
+    color: #000000;
     font-size: 1.25rem;
     text-decoration: none;
     display: flex;
@@ -240,6 +244,7 @@ body {
 
 .admin-nav-links {
     display: flex;
+    color: #000000;
     gap: 1rem;
 }
 
@@ -249,11 +254,12 @@ body {
     padding: 0.5rem 1rem;
     border-radius: 4px;
     transition: all 0.3s ease;
+    color: #000000;
 }
 
 .admin-nav-links .nav-link:hover,
 .admin-nav-links .nav-link.active {
-    color: #fff;
+    color: #000000;
     background: rgba(255, 255, 255, 0.1);
 }
 
@@ -293,7 +299,7 @@ body {
 .sidebar-nav li a:hover,
 .sidebar-nav li.active a {
     background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    color: #000;
 }
 
 .sidebar-nav li a i {
@@ -303,8 +309,8 @@ body {
 
 /* Admin Footer */
 .admin-footer {
-    background: var(--footer-bg, #2c3e50);
-    color: #fff;
+    background: var(--footer-bg, #f1f1f1);
+    color: #000;
     padding: 1rem 0;
     text-align: center;
 }

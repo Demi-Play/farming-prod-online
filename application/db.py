@@ -12,11 +12,12 @@ class User(db.Model, UserMixin):
     # User's table
     
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150), nullable=True)
-    surname = db.Column(db.String(150), nullable=True)
-    email = db.Column(db.String(150), nullable=True, unique=True)
-    password_hash = db.Column(db.String(150), nullable=True)
-    role = db.Column(db.String(100), default='user') # roles: user, seller, admin
+    name = db.Column(db.String(100), nullable=False)
+    surname = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(128))
+    role = db.Column(db.String(20), default='user') # roles: user, seller, admin
+    is_active = db.Column(db.Boolean, default=True)
     # logs:
     created_at = db.Column(db.DateTime, default=datetime.now())
     
@@ -31,6 +32,12 @@ class User(db.Model, UserMixin):
         
     def check_password(self, password):
         return bcrypt.check_password_hash(self.password_hash, password)
+
+    # Relationships
+    products = db.relationship('Product', backref='seller', lazy=True)
+    orders = db.relationship('Orders', backref='user', lazy=True)
+    reviews = db.relationship('Reviews', backref='user', lazy=True)
+    cart = db.relationship('Cart', backref='user', lazy=True, uselist=False)
 
 class Product(db.Model):
     # Product's table
@@ -68,6 +75,9 @@ class Reviews(db.Model):
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now())
+    
+    # Добавляем отношение к Product
+    product = db.relationship('Product', backref=db.backref('reviews', lazy=True))
 
 class Category(db.Model):
     # Category table
@@ -89,3 +99,16 @@ class ActivityLog(db.Model):
 
     def __repr__(self):
         return f'<ActivityLog {self.action_type}: {self.description}>'
+
+class Cart(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now())
+    items = db.relationship('CartItem', backref='cart', lazy=True, cascade='all, delete-orphan')
+
+class CartItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cart_id = db.Column(db.Integer, db.ForeignKey('cart.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False, default=1)
+    product = db.relationship('Product', backref='cart_items')

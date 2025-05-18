@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Корзина{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Корзина</h1>
+</div>
+
+{% if cart.items %}
+    <div class="cart-items">
+        {% for item in cart.items %}
+            <div class="cart-item">
+                <div class="cart-item-image">
+                    {% if item.product.image %}
+                        <img src="{{ item.product.image }}" alt="{{ item.product.name }}">
+                    {% endif %}
+                </div>
+                <div class="cart-item-info">
+                    <h3>{{ item.product.name }}</h3>
+                    <p class="price">{{ item.product.price }} ₽</p>
+                    <form method="POST" action="{{ url_for('cart_update', item_id=item.id) }}" class="quantity-form">
+                        <div class="quantity-input">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="decrementQuantity(this)">-</button>
+                            <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.count }}" class="form-control">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="incrementQuantity(this)">+</button>
+                        </div>
+                        <button type="submit" class="btn btn-secondary">Обновить</button>
+                    </form>
+                </div>
+                <div class="cart-item-total">
+                    <p>Итого: {{ item.product.price * item.quantity }} ₽</p>
+                    <a href="{{ url_for('cart_remove', item_id=item.id) }}" class="btn btn-danger" onclick="return confirm('Удалить товар из корзины?')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="cart-summary">
+        <div class="total">
+            <h3>Итого к оплате:</h3>
+            <p class="total-price">
+                {{ cart.items|sum(attribute='quantity')|sum(attribute='product.price') }} ₽
+            </p>
+        </div>
+        <div class="cart-actions">
+            <a href="{{ url_for('cart_clear') }}" class="btn btn-danger" onclick="return confirm('Очистить корзину?')">
+                Очистить корзину
+            </a>
+            <a href="{{ url_for('order_add') }}" class="btn btn-primary">
+                Оформить заказ
+            </a>
+        </div>
+    </div>
+{% else %}
+    <div class="empty-cart">
+        <p>Ваша корзина пуста</p>
+        <a href="{{ url_for('products_list') }}" class="btn btn-primary">Перейти к товарам</a>
+    </div>
+{% endif %}
+
+<script>
+function incrementQuantity(button) {
+    const input = button.parentElement.querySelector('input');
+    const max = parseInt(input.getAttribute('max'));
+    const currentValue = parseInt(input.value);
+    if (currentValue < max) {
+        input.value = currentValue + 1;
+    }
+}
+
+function decrementQuantity(button) {
+    const input = button.parentElement.querySelector('input');
+    const currentValue = parseInt(input.value);
+    if (currentValue > 1) {
+        input.value = currentValue - 1;
+    }
+}
+</script>
+{% endblock %} 

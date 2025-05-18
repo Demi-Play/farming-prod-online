@@ -215,7 +215,8 @@ form input {
 /* Products Grid */
 .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); */
+    justify-content: center;
     gap: 2rem;
     padding: 1rem 0;
 }
@@ -267,7 +268,11 @@ form input {
 .product-actions {
     display: flex;
     gap: 0.5rem;
+    flex-direction: row;
     flex-wrap: wrap;
+    align-content: normal;
+    justify-content: space-between;
+    align-items: flex-start;
 }
 
 /* Forms */

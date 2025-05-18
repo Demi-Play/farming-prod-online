@@ -1,7 +1,7 @@
 from flask import flash, redirect, render_template, url_for, request, abort, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from application.app import app, db
-from application.db import User, Product, Category, Orders, Reviews, ActivityLog, Orders as Order
+from application.db import User, Product, Category, Orders, Reviews, ActivityLog, Orders as Order, Cart, CartItem
 from application.forms import (
     LoginForm, RegisterForm, ProductForm, 
     OrderForm,  # Используем OrderForm вместо Orders
@@ -16,6 +16,9 @@ from application.utils import role_required
 from datetime import datetime, timedelta
 import plotly.express as px
 import pandas as pd
+import os
+from werkzeug.utils import secure_filename
+import uuid
 
 # В начале файла, после импортов
 def log_activity(action_type, description):
@@ -321,7 +324,7 @@ def products_list():
     """Список продуктов с фильтрацией"""
     # Получаем параметры фильтрации
     category_id = request.args.get('category', type=int)
-    search_query = request.args.get('search', '').lower()  # Приводим запрос к нижнему регистру
+    search_query = request.args.get('search', '').strip()  # Убираем лишние пробелы
 
     # Базовый запрос
     query = Product.query
@@ -330,8 +333,14 @@ def products_list():
     if category_id:
         query = query.filter(Product.category_id == category_id)
     if search_query:
-        # Используем func.lower() для приведения имени продукта к нижнему регистру
-        query = query.filter(func.lower(Product.name).like(f'%{search_query}%'))
+        # Используем ilike для регистронезависимого поиска
+        search_pattern = f'%{search_query}%'
+        query = query.filter(
+            db.or_(
+                Product.name.ilike(search_pattern),
+                Product.description.ilike(search_pattern)
+            )
+        )
 
     # Получаем отфильтрованные продукты
     products = query.all()
@@ -344,6 +353,47 @@ def products_list():
                          categories=categories,
                          selected_category=category_id,
                          search_query=search_query)
+
+def allowed_file(filename):
+    """Проверка расширения файла"""
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_image(file):
+    """Сохранение изображения с уникальным именем"""
+    if file and allowed_file(file.filename):
+        try:
+            # Получаем расширение файла
+            ext = file.filename.rsplit('.', 1)[1].lower()
+            # Создаем уникальное имя файла
+            filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:8]}.{ext}"
+            
+            # Получаем абсолютный путь к корневой папке проекта
+            base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+            # Создаем папку для загрузок в корневой static
+            upload_folder = os.path.join(base_dir, 'static', 'uploads')
+            
+            # Создаем папку, если её нет
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            # Полный путь к файлу
+            file_path = os.path.join(upload_folder, filename)
+            
+            # Сохраняем файл
+            file.save(file_path)
+            
+            # Проверяем, что файл действительно создался
+            if os.path.exists(file_path):
+                print(f"Файл успешно сохранен: {file_path}")
+                return f'/static/uploads/{filename}'
+            else:
+                print(f"Ошибка: файл не был создан по пути {file_path}")
+                return None
+                
+        except Exception as e:
+            print(f"Ошибка при сохранении файла: {str(e)}")
+            return None
+    return None
 
 @app.route('/products/add', methods=['GET', 'POST'])
 @seller_or_admin_required
@@ -359,9 +409,12 @@ def product_add():
             seller_id=current_user.id,
             category_id=form.category_id.data
         )
+        
         if form.image.data:
-            # Здесь должна быть логика сохранения изображения
-            pass
+            image_path = save_image(form.image.data)
+            if image_path:
+                product.image = image_path
+        
         db.session.add(product)
         db.session.commit()
         
@@ -386,8 +439,19 @@ def product_edit(id):
         product.price = form.price.data
         product.count = form.count.data
         product.category_id = form.category_id.data
+        
         if form.image.data:
-            product.image = form.image.data
+            # Удаляем старое изображение, если оно есть
+            if product.image:
+                old_file_path = os.path.join(app.root_path, product.image.lstrip('/'))
+                if os.path.exists(old_file_path):
+                    os.remove(old_file_path)
+            
+            # Сохраняем новое изображение
+            image_path = save_image(form.image.data)
+            if image_path:
+                product.image = image_path
+        
         db.session.commit()
         
         log_activity('product', f'Отредактирован продукт: {old_name} -> {product.name}')
@@ -509,15 +573,47 @@ def order_cancel(id):
 @app.route('/reviews')
 def reviews_list():
     """Список всех отзывов"""
-    reviews = Reviews.query.all()
-    return render_template('reviews/list.html', reviews=reviews)
+    # Получаем параметры фильтрации
+    product_id = request.args.get('product', type=int)
+    user_id = request.args.get('user', type=int)
+    
+    query = Reviews.query
+    
+    if product_id:
+        query = query.filter(Reviews.product_id == product_id)
+    if user_id:
+        query = query.filter(Reviews.user_id == user_id)
+    
+    # Сортируем отзывы по дате создания (новые сверху)
+    # Добавляем join с Product для оптимизации запросов
+    reviews = query.join(Product).order_by(Reviews.created_at.desc()).all()
+    
+    # Получаем все продукты для фильтра
+    products = Product.query.all()
+    
+    return render_template('reviews/list.html', 
+                         reviews=reviews,
+                         products=products,
+                         selected_product=product_id)
 
 @app.route('/reviews/add/<int:product_id>', methods=['GET', 'POST'])
 @login_required
 def review_add(product_id):
     """Добавление отзыва к продукту"""
+    product = Product.query.get_or_404(product_id)
     form = ReviewForm()
+    
     if form.validate_on_submit():
+        # Проверяем, не оставлял ли пользователь уже отзыв на этот продукт
+        existing_review = Reviews.query.filter_by(
+            product_id=product_id,
+            user_id=current_user.id
+        ).first()
+        
+        if existing_review:
+            flash('Вы уже оставляли отзыв на этот продукт!', 'warning')
+            return redirect(url_for('reviews_list'))
+        
         review = Reviews(
             product_id=product_id,
             user_id=current_user.id,
@@ -526,9 +622,31 @@ def review_add(product_id):
         )
         db.session.add(review)
         db.session.commit()
-        flash('Отзыв добавлен!', 'success')
-        return redirect(url_for('products_list'))
-    return render_template('reviews/add.html', form=form)
+        
+        log_activity('review', f'Добавлен отзыв к продукту: {product.name}')
+        flash('Отзыв успешно добавлен!', 'success')
+        return redirect(url_for('reviews_list'))
+        
+    return render_template('reviews/add.html', form=form, product=product)
+
+@app.route('/reviews/<int:id>/delete')
+@login_required
+def review_delete(id):
+    """Удаление отзыва"""
+    review = Reviews.query.get_or_404(id)
+    
+    # Проверяем права на удаление
+    if current_user.role != 'admin' and review.user_id != current_user.id:
+        flash('У вас нет прав на удаление этого отзыва!', 'danger')
+        return redirect(url_for('reviews_list'))
+    
+    product_name = review.product.name
+    db.session.delete(review)
+    db.session.commit()
+    
+    log_activity('review', f'Удален отзыв к продукту: {product_name}')
+    flash('Отзыв удален!', 'success')
+    return redirect(url_for('reviews_list'))
 
 # --------- Управление категориями ---------
 
@@ -585,9 +703,17 @@ def category_delete(id):
         return redirect(url_for('categories_list'))
     
     category = Category.query.get_or_404(id)
+    
+    # Удаляем все связанные продукты
+    for product in category.products:
+        db.session.delete(product)
+    
+    # Удаляем саму категорию
     db.session.delete(category)
     db.session.commit()
-    flash('Категория удалена!', 'success')
+    
+    log_activity('category', f'Удалена категория: {category.name} и все связанные продукты')
+    flash('Категория и все связанные продукты удалены!', 'success')
     return redirect(url_for('categories_list'))
 
 # Маршруты для управления пользователями (только для админа)
@@ -777,5 +903,79 @@ def order_pay(id):
     else:
         flash('Невозможно оплатить заказ в текущем статусе!', 'danger')
     return redirect(url_for('orders_list'))
+
+@app.route('/cart')
+@login_required
+def cart():
+    cart = Cart.query.filter_by(user_id=current_user.id).first()
+    if not cart:
+        cart = Cart(user_id=current_user.id)
+        db.session.add(cart)
+        db.session.commit()
+    return render_template('cart.html', cart=cart)
+
+@app.route('/cart/add/<int:product_id>', methods=['POST'])
+@login_required
+def cart_add(product_id):
+    product = Product.query.get_or_404(product_id)
+    quantity = int(request.form.get('quantity', 1))
+    
+    if quantity <= 0 or quantity > product.count:
+        flash('Некорректное количество товара', 'error')
+        return redirect(url_for('products_list'))
+    
+    cart = Cart.query.filter_by(user_id=current_user.id).first()
+    if not cart:
+        cart = Cart(user_id=current_user.id)
+        db.session.add(cart)
+    
+    cart_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product_id).first()
+    if cart_item:
+        cart_item.quantity += quantity
+    else:
+        cart_item = CartItem(cart_id=cart.id, product_id=product_id, quantity=quantity)
+        db.session.add(cart_item)
+    
+    db.session.commit()
+    flash('Товар добавлен в корзину', 'success')
+    return redirect(url_for('cart'))
+
+@app.route('/cart/update/<int:item_id>', methods=['POST'])
+@login_required
+def cart_update(item_id):
+    cart_item = CartItem.query.get_or_404(item_id)
+    if cart_item.cart.user_id != current_user.id:
+        abort(403)
+    
+    quantity = int(request.form.get('quantity', 0))
+    if quantity <= 0:
+        db.session.delete(cart_item)
+    else:
+        cart_item.quantity = quantity
+    
+    db.session.commit()
+    return redirect(url_for('cart'))
+
+@app.route('/cart/remove/<int:item_id>')
+@login_required
+def cart_remove(item_id):
+    cart_item = CartItem.query.get_or_404(item_id)
+    if cart_item.cart.user_id != current_user.id:
+        abort(403)
+    
+    db.session.delete(cart_item)
+    db.session.commit()
+    flash('Товар удален из корзины', 'success')
+    return redirect(url_for('cart'))
+
+@app.route('/cart/clear')
+@login_required
+def cart_clear():
+    cart = Cart.query.filter_by(user_id=current_user.id).first()
+    if cart:
+        CartItem.query.filter_by(cart_id=cart.id).delete()
+        db.session.commit()
+    flash('Корзина очищена', 'success')
+    return redirect(url_for('cart'))
 
 
